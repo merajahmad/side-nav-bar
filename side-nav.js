@@ -1,83 +1,136 @@
 'use strict';
 
-class SideNav{
-  constructor(){
-    this.showButtonEl = document.querySelector('.js-menu-show');
-    this.hideButtonEl = document.querySelector('.js-menu-hide');
-    this.SideNavEl = document.querySelector('.js-side-nav');
-    this.sideNavContainerEl = document.querySelector('.js-side-nav-container');
+ class SideNav {
+   constructor () {
+     this.showButtonEl = document.querySelector('.js-menu-show');
+     this.hideButtonEl = document.querySelector('.js-menu-hide');
+     this.sideNavEl = document.querySelector('.js-side-nav');
+     this.sideNavContainerEl = document.querySelector('.js-side-nav-container');
+     this.bodyEl = document.querySelector('.js-body');
+     this.styleEl = document.head.appendChild(document.createElement('style'));
 
-    this.showSideNav = this.showSideNav.bind(this);
-    this.hideSideNav = this.hideSideNav.bind(this);
-    this.blockClicks = this.blockClicks.bind(this);
-    this.onTouchStart = this.onTouchStart.bind(this);
-    this.onTouchMove = this.onTouchMove.bind(this);
-    this.onTouchEnd = this.onTouchEnd.bind(this);
-    this.onTransitionEnd = this.onTransitionEnd.bind(this);
+     this.showSideNav = this.showSideNav.bind(this);
+     this.hideSideNav = this.hideSideNav.bind(this);
+     this.blockClicks = this.blockClicks.bind(this);
+     this.onTouchStart = this.onTouchStart.bind(this);
+     this.onTouchMove = this.onTouchMove.bind(this);
+     this.onTouchEnd = this.onTouchEnd.bind(this);
+     this.onTransitionEnd = this.onTransitionEnd.bind(this);
+     this.update = this.update.bind(this);
 
-    this.startX = 0;
-    this.currentX = 0;
-    this.addEventListeners();
-  }
+     this.startX = 0;
+     this.currentX = 0;
+     this.touchingSideNav = false;
+     this.isHidden = true;
 
-    addEventListeners(){
-      this.showButtonEl.addEventListener('click', this.showSideNav);
-      this.hideButtonEl.addEventListener('click', this.hideSideNav);
-      this.SideNavEl.addEventListener('click', this.hideSideNav);
-      this.sideNavContainerEl.addEventListener('click', this.blockClicks);
-      document.addEventListener('touchstart', this.onTouchStart);
-      document.addEventListener('touchmove', this.onTouchMove);
-      document.addEventListener('touchend', this.onTouchEnd);
-    }
+     this.addEventListeners();
+   }
 
-    onTouchStart(e){
-      if(this.SideNavEl.classList.contains('side-nav--visible'))
-      return;
+   addEventListeners () {
+     this.showButtonEl.addEventListener('click', this.showSideNav);
+     this.hideButtonEl.addEventListener('click', this.hideSideNav);
+     this.sideNavEl.addEventListener('click', this.hideSideNav);
+     this.sideNavContainerEl.addEventListener('click', this.blockClicks);
 
-    //  e.preventDefault();
-      this.startX = e.touches[0].pageX;
-      this.currentX = this.startX;
-    }
+     this.sideNavEl.addEventListener('touchstart', this.onTouchStart);
+     this.sideNavEl.addEventListener('touchmove', this.onTouchMove);
+     this.sideNavEl.addEventListener('touchend', this.onTouchEnd);
+     this.bodyEl.addEventListener('touchstart', this.onTouchStart);
+     this.bodyEl.addEventListener('touchmove', this.onTouchMove);
+     this.bodyEl.addEventListener('touchend', this.onTouchEnd);
+   }
 
-    onTouchMove(e){
-      this.currentX = e.touches[0].pageX;
-      const translateX = Math.min(0, this.currentX - this.startX);
+   onTouchStart (evt) {
+     if (this.isHidden) {
 
-      if(translateX < 0){
-      //  e.preventDefault();
-      }
+       if (evt.touches[0].pageX > 30) return;
 
-      this.sideNavContainerEl.style.transform = `translateX(${translateX}px)`;
-    }
+     }
+     this.sideNavBCR = this.sideNavContainerEl.getBoundingClientRect();
 
-    onTouchEnd(e){
-        const translateX = Math.min(0, this.currentX - this.startX);
-        if(translateX < 0){
-          this.sideNavContainerEl.style.transform = '';
-          this.hideSideNav();
-        }
-    }
+     this.startX = Math.min(evt.touches[0].pageX, this.sideNavBCR.right);
 
-    blockClicks(e){
-      e.stopPropagation();
-    }
+     this.currentX = this.startX;
 
-    onTransitionEnd(e){
-        this.SideNavEl.classList.remove('side-nav--animatable');
-        this.SideNavEl.removeEventListener('transitionend', this.onTransitionEnd);
-    }
+     this.touchingSideNav = true;
+     requestAnimationFrame(this.update);
+   }
 
-    showSideNav(){
-      this.SideNavEl.classList.add('side-nav--visible');
-      this.SideNavEl.classList.add('side-nav--animatable');
-      this.SideNavEl.addEventListener('transitionend', this.onTransitionEnd);
-    }
+   onTouchMove (evt) {
+     if (!this.touchingSideNav)
+       return;
 
-    hideSideNav(){
-      this.SideNavEl.classList.remove('side-nav--visible');
-      this.SideNavEl.classList.add('side-nav--animatable');
-      this.SideNavEl.addEventListener('transitionend', this.onTransitionEnd);
-    }
-  }
+     this.currentX = evt.touches[0].pageX;
+     if (!this.isHidden) {
+       if (this.currentX > this.startX) this.startX = this.currentX;
+       this.startX = Math.min(this.startX, this.sideNavBCR.right);
+     }
 
-new SideNav();
+     evt.preventDefault();
+   }
+
+   onTouchEnd (evt) {
+     if (!this.touchingSideNav)
+       return;
+
+     this.touchingSideNav = false;
+
+     const translateX = this.currentX - this.startX;
+     this.sideNavContainerEl.style.transform = '';
+
+     if (translateX < - this.sideNavBCR.width / 2) {
+       this.hideSideNav();
+    } else if (translateX > this.sideNavBCR.width / 2) {
+      this.showSideNav();
+     } else {
+       this.sideNavEl.classList.add('side-nav--animatable');
+       this.sideNavEl.addEventListener('transitionend', this.onTransitionEnd);
+     }
+     this.styleEl.innerHTML = '';
+   }
+
+   update () {
+     if (!this.touchingSideNav)
+       return;
+
+     requestAnimationFrame(this.update);
+
+     let translateX;
+     if (this.isHidden) {
+       
+     translateX = this.currentX - this.startX - this.sideNavBCR.width * 1.02;
+     } else {
+       translateX = this.currentX - this.startX;
+     }
+     translateX = Math.min(0, translateX);
+     const opacity = 1 - -translateX / this.sideNavBCR.width;
+    this.styleEl.innerHTML = `.side-nav::before { opacity: ${opacity}; }`;
+   this.sideNavContainerEl.style.transform = `translateX(${translateX}px)`;
+   }
+
+   blockClicks (evt) {
+     evt.stopPropagation();
+   }
+
+   onTransitionEnd (evt) {
+     this.sideNavEl.classList.remove('side-nav--animatable');
+     this.sideNavEl.removeEventListener('transitionend', this.onTransitionEnd);
+   }
+
+   showSideNav () {
+     this.sideNavEl.classList.add('side-nav--animatable');
+     this.sideNavEl.classList.add('side-nav--visible');
+     this.sideNavEl.addEventListener('transitionend', this.onTransitionEnd);
+     this.isHidden = false;
+   }
+
+   hideSideNav () {
+     this.sideNavEl.classList.add('side-nav--animatable');
+     this.sideNavEl.classList.remove('side-nav--visible');
+     this.sideNavEl.addEventListener('transitionend', this.onTransitionEnd);
+     this.isHidden = true;
+   }
+ }
+
+ new SideNav();
+

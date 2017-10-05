@@ -8,22 +8,29 @@
 html, body{
   padding: 0;
   margin: 0;
-  background:url('bkg.jpg') no-repeat center center fixed;
+  background:url('../img/bkg.jpg') no-repeat center center fixed;
   background-size: cover;
 }
-
+.wrapper{
+  width: 100vw;
+  height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex-direction: column;
+}
 .header{
   margin-top: 10pt;
   margin-left: 10pt;
   width:50pt;
   height:50pt;
-  background: tomato;
+  background: transparent;
   border-radius: 50%;
   text-align: center;
   color: #FFF;
   display: flex;
   flex-direction: row;
   align-items: center;
+  z-index:100;
 }
 
 .header__menu-toggle{
@@ -36,6 +43,10 @@ html, body{
   color: #FFF;
   font-size: 30pt;
   cursor: pointer;
+  outline:none;
+}
+.body{
+  flex-grow: 1;
 }
 
 .side-nav{
@@ -90,7 +101,9 @@ html, body{
 .side-nav--visible .side-nav--animatable .side-nav__container{
   transition: transform 0.13s cubic-bezier(0,0,0.3,1);
 }
-
+.side-nav--animatable .side-nav::before{
+  transition: transform 0.13s cubic-bezier(0,0,0.3,1);
+}
 .side-nav--animatable .side-nav__container{
   transition: transform 0.33s cubic-bezier(0,0,0.3,1);
 }
@@ -103,11 +116,13 @@ html, body{
   border:none;
   color:#fff;
   font-size: 20pt;
+  outline:none;
+  cursor: pointer;
 }
 
 .side-nav__header{
   height:200px;
-  background:url('ggg.jpg') no-repeat;
+  background:url('../img/ggg.jpg') no-repeat;
   background-size:contain;
   padding: 16px;
 }
@@ -131,3 +146,5 @@ html, body{
   background:rgba(246, 43, 19, 0.5);
   color:#FFFFFF;
 }
+
+
